@@ -9,11 +9,12 @@ import { AuthRequest } from "../middleware/auth.middleware";
 async function isBoardGameQuestion(message: string, history: string): Promise<boolean> {
   const result = await openai.responses.create({
     model: process.env.AZURE_OPENAI_DEPLOYMENT!,
-    instructions: `You are a board game topic classifier.
+    instructions: `You are a classifier. Decide if the user's message is related to board games.
 
-Read the conversation history and the new message together as a whole.
-If the overall conversation is about board games or the new message asks about games, gaming, playing — return YES.
-Only return NO if the message is completely unrelated to games entirely (weather, cooking, politics etc).
+Consider the recent conversation history to understand follow-up questions like:
+"what does it cost?", "tell me more", "any others?", "which is best?",
+"do you have more?", "any other options?", "what else?", "tell me more about it"
+— these ARE board game related if the history is about board games.
 
 Reply with ONLY one word: YES or NO.`,
     input: `Recent conversation:
@@ -95,17 +96,20 @@ export const chat = async (req: AuthRequest, res: Response): Promise<void> => {
     const stream = await openai.responses.create({
       model: process.env.AZURE_OPENAI_DEPLOYMENT!,
       stream: true,
-      instructions: `You are BoardVerse AI, a friendly and knowledgeable board game expert.
+      instructions: `You are BoardVerse AI, an expert on board games.
 
 RULES:
 - Only answer board game questions.
-- You have detailed knowledge about Catan, Chess, Ticket to Ride, Scrabble and Ludo from your knowledge base — always use the provided CONTEXT for these.
-- For ANY other board game question, use the provided CONTEXT from web search to answer.
-- NEVER say "I only specialize in 5 games" or "I don't have info on that" — always give a helpful answer.
-- If user asks "what about board games" or "any more" or "what else" — give them a list of popular board games with brief descriptions.
-- Use chat history to understand follow-up questions correctly.
-- Use markdown formatting, **bold** for important terms, bullet points where helpful.
-- Keep answers friendly, concise and helpful.`,
+- Your knowledge base contains exactly 5 games: Catan, Chess, Ticket to Ride, Scrabble and Ludo.
+- For questions about these 5 games ALWAYS use the provided CONTEXT as your primary source.
+- If user asks for "more options" or "other games" beyond these 5 — take the content from the CONTEXT and use your general board game knowledge to provide additional recommendations.
+- NEVER say "I only have 5 games" or "I don't have more options" — always give more recommendations using general knowledge.
+- For any board game not in context, use your general board game knowledge to answer freely.
+- Use chat history to correctly answer follow-up questions.
+- Use markdown formatting for better readability.
+- Use **bold** for headings and important terms.
+- Use numbered lists or bullet points where helpful.
+- Keep answers clear, concise and helpful.`,
       input: `CHAT HISTORY
 ${conversationHistory}
 
