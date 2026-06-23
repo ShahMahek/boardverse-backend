@@ -11,16 +11,10 @@ async function isBoardGameQuestion(message: string, history: string): Promise<bo
     model: process.env.AZURE_OPENAI_DEPLOYMENT!,
     instructions: `You are a classifier. Decide if the user's message is related to board games.
 
-IMPORTANT: Always check the conversation history first.
-If the history contains ANY board game discussion, then ALL follow-up messages are board game related — no matter how short or unrelated they seem in isolation.
-
-Examples of follow-ups that ARE board game related if history is about board games:
-"any more", "what else", "tell me more", "any others", "more options",
-"what is its cost", "how much does it cost", "where to buy", "how many players",
-"ok", "sure", "yes", "go on", "continue", "and?", "really?", "wow"
-
-Only return NO if:
-- There is no board game history AND the message is clearly unrelated to board games.
+IMPORTANT: Always read the conversation history to understand context.
+- If history is about board games and the new message is a follow-up (even vague ones like "any more", "what else", "tell me more", "how much", "where to buy") — return YES.
+- If the new message is clearly a new unrelated topic (like "what is the weather", "tell me a joke") — return NO even if history has board games.
+- If there is no history and message is unrelated to board games — return NO.
 
 Reply with ONLY one word: YES or NO.`,
     input: `Recent conversation:
@@ -78,9 +72,14 @@ export const chat = async (req: AuthRequest, res: Response): Promise<void> => {
 
     const ragIsUseful = ragContext && ragContext.trim().length > 50;
 
+    const vagueFollowUp = /^(any more|what else|more|others|and\?|really|wow|ok|sure|yes|go on|continue)$/i.test(message.trim());
+
     if (ragIsUseful) {
       source = "RAG";
       context = ragContext;
+    } else if (vagueFollowUp) {
+      source = "WEB";
+      context = conversationHistory; // reuse history as context
     } else {
       source = "WEB";
       const webResult = await getWebContext(message);
