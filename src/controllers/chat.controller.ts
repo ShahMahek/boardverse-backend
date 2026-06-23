@@ -13,8 +13,10 @@ async function isBoardGameQuestion(message: string, history: string): Promise<bo
 
 Consider the recent conversation history to understand follow-up questions like:
 "what does it cost?", "tell me more", "any others?", "which is best?",
-"do you have more?", "any other options?", "what else?", "tell me more about it"
-— these ARE board game related if the history is about board games.
+"do you have more?", "any other options?", "what else?", "tell me more about it",
+"by whom", "who made it", "who created it", "when", "how long ago",
+"price", "cost", "how much", "where to buy", "in rupees", "in usd"
+— these ARE board game related if the recent history is about board games.
 
 Reply with ONLY one word: YES or NO.`,
     input: `Recent conversation:
@@ -79,10 +81,12 @@ export const chat = async (req: AuthRequest, res: Response): Promise<void> => {
       context = ragContext;
     } else if (vagueFollowUp) {
       source = "WEB";
-      context = conversationHistory; // reuse history as context
+      context = conversationHistory;
     } else {
       source = "WEB";
-      const webResult = await getWebContext(message);
+      const lastGame = conversationHistory.match(/\b([A-Z][a-z]+(?: [A-Z][a-z]+)*)\b/)?.[0] || "";
+      const enrichedQuery = lastGame ? `${message} ${lastGame} board game` : message;
+      const webResult = await getWebContext(enrichedQuery);
       context = webResult.context;
       sourceUrls = webResult.urls;
     }
