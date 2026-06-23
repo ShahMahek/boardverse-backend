@@ -10,7 +10,7 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://YOUR-STATIC-APP-NAME.azurestaticapps.net"
+    "https://witty-sea-01c14460f.7.azurestaticapps.net"
   ],
   credentials: true,
 }));
