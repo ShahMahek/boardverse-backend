@@ -9,12 +9,14 @@ import { AuthRequest } from "../middleware/auth.middleware";
 async function isBoardGameQuestion(message: string, history: string): Promise<boolean> {
   const result = await openai.responses.create({
     model: process.env.AZURE_OPENAI_DEPLOYMENT!,
-    instructions: `You are a classifier. Decide if the user's message is related to board games.
+   instructions: `You are a classifier. Decide if the user's message is related to board games.
 
-Consider the recent conversation history to understand follow-up questions like:
-"what does it cost?", "tell me more", "any others?", "which is best?",
-"do you have more?", "any other options?", "what else?", "tell me more about it"
-— these ARE board game related if the history is about board games.
+Consider the recent conversation history to understand follow-up questions.
+ANY short follow-up like "any more", "what else", "tell me more", "any others", 
+"more options", "and?", "ok", "sure", "yes", "go on", "continue" — these are 
+ALWAYS board game related if the recent history is about board games.
+
+If history is about board games, assume ALL follow-up messages are board game related.
 
 Reply with ONLY one word: YES or NO.`,
     input: `Recent conversation:
