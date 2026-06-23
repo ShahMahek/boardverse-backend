@@ -8,17 +8,18 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install & Build
         run: |
-          npm install
+          npm install --include=dev
           npm run build
+          npm prune --production
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
